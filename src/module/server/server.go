@@ -13,8 +13,8 @@ import (
 
 	"pdbg.work/shiba/module/parse"
 	
-//	"pdbg.work/shiba/module/setting"
-//	"pdbg.work/shiba/module/exec"
+	"pdbg.work/shiba/module/setting"
+	"pdbg.work/shiba/module/exec"
 )
 
 func Exec() {
@@ -32,30 +32,41 @@ func Exec() {
 	}()
 	
 	// Cron.
-/*
-	ch := make(chan string)
-	go func(ch <-chan string) {
-		for {
-			exec.Cron()
-			
-			select {
-			case s := <-ch:			
-				if s == "close" {
-					break
+	var ch chan string
+	var cronFlag int = 1
+
+	if setting.TimerExec == true {
+		ch = make(chan string)
+		go func(ch <-chan string) {
+			for {
+				//
+				select {
+				case s := <-ch:			
+					if s == "close" {
+						break
+					}
+				default:
 				}
-			default:
-				time.Sleep(time.Duration(setting.CronTimerMicroseccond) * time.Microsecond)
+				
+				//
+				if cronFlag == 1 {
+					exec.Cron()
+				} else {
+					time.Sleep(time.Duration(setting.CronTimerMicroseccond) * time.Microsecond)
+				}
+				cronFlag = -cronFlag
 			}
-		}
-	}(ch)
-*/
+		}(ch)
+	}
 	
 	// サーバーの終了処理	
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGTERM, os.Interrupt, os.Kill)
 	<-sigCh
-	
-//	ch <- "close"
+
+	if setting.TimerExec == true {
+		ch <- "close"
+	}
 	
 	ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)	
 	err := server.Shutdown(ctx) // Graceful Shutdown.

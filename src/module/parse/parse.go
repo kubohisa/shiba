@@ -15,6 +15,8 @@ var (
 	param []string
 	
 	limiter = rate.NewLimiter(rate.Limit(setting.ServerSecondLimit), setting.MaxClients) // 検討 1sec1000, 30acsess.
+	
+	count int = 0
 )
 
 func Parse(w http.ResponseWriter, r *http.Request) {
@@ -57,6 +59,10 @@ func Parse(w http.ResponseWriter, r *http.Request) {
 			
 			// 実行
 			setting.Functions[f](w, r, param)
+			
+			// ガーベージコレクタ
+			//count++
+			
 			return
 		}
 	}
