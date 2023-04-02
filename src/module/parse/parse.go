@@ -55,7 +55,17 @@ func Parse(w http.ResponseWriter, r *http.Request) {
 		
 		if (setting.Functions[f] != nil) {
 			// POSTのパース
-			r.ParseForm()
+			err := r.ParseMultipartForm(32 << 20) // 32MB
+			if err != nil {
+				if err != http.ErrNotMultipart {
+					http.Error(w, "500 Internal Server Error.", 500)
+				}
+			} else {
+				err = r.ParseForm()
+				if err != nil {
+					http.Error(w, "500 Internal Server Error.", 500)
+				}
+			}
 			
 			// 実行
 			setting.Functions[f](w, r, param)
